@@ -7,8 +7,7 @@ class UserCreate(BaseModel):
         pattern=r"^[6-9]\d{9}$")
     password: str = Field(
         min_length=8,
-        max_length=32,
-       
+        max_length=32,  
     )
     role: str
     latitude: float
@@ -28,3 +27,5 @@ class UserCreate(BaseModel):
 
         if not any(not c.isalnum() for c in password):
             raise ValueError("Password must contain a special character")
+
+        return password    
