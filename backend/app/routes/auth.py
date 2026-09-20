@@ -31,3 +31,20 @@ def register(user: UserCreate):
     return {
         "message": "Registration is successful"
     }
+
+@router.post("/login")
+def login(user: UserLogin):
+    existing_user = users.find_one({"email": user.email})
+    if not existing_user:
+        return {
+            "message": "User does not exist ,Please Register "
+        }
+
+    if not pwd.verify(user.password, existing_user["password"]):
+        return {
+            "message": "Invalid email or password"
+        }
+
+    return {
+        "message": "Login successful"
+    }    

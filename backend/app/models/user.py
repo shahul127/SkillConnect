@@ -29,3 +29,7 @@ class UserCreate(BaseModel):
             raise ValueError("Password must contain a special character")
 
         return password    
+
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str
