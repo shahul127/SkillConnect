@@ -1,8 +1,8 @@
 from fastapi import APIRouter
-from app.models.user import UserCreate 
+from app.models.user import UserCreate, UserLogin 
 from passlib.context import CryptContext
 from app.database.mongo import users
-
+from app.utils.jwt import create_access_token
 
 pwd = CryptContext(schemes=["bcrypt"])
 router=APIRouter(prefix="/auth")
@@ -44,7 +44,18 @@ def login(user: UserLogin):
         return {
             "message": "Invalid email or password"
         }
+    
+
+    token_data = {
+        "email": existing_user["email"],
+        "role": existing_user["role"]
+    }
+
+    access_token = create_access_token(token_data)
 
     return {
-        "message": "Login successful"
-    }    
+        "message": "Login successful",
+        "access_token": access_token,
+        "token_type": "bearer"
+    }
+   
