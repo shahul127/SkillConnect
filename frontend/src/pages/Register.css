@@ -1,0 +1,271 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f4f6f8;
+}
+
+/* Main Page */
+
+.register-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px 20px;
+  background: linear-gradient(
+    135deg,
+    #eef2f7,
+    #f8fafc
+  );
+}
+
+/* Card */
+
+.register-card {
+  width: 100%;
+  max-width: 480px;
+  background: #ffffff;
+  padding: 35px;
+  border-radius: 16px;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.08);
+}
+
+/* Header */
+
+.register-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.register-header h1 {
+  margin: 0;
+  font-size: 30px;
+  color: #1f2937;
+}
+
+.register-header h2 {
+  margin: 10px 0 8px;
+  font-size: 22px;
+  color: #374151;
+}
+
+.register-header p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Form */
+
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.form-group label span {
+  color: #dc2626;
+}
+
+/* Inputs */
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 12px 13px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111827;
+  font-size: 14px;
+  transition: 0.2s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #374151;
+  box-shadow: 0 0 0 3px rgba(55, 65, 81, 0.08);
+}
+
+/* Password */
+
+.password-strength {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* Location */
+
+.location-section {
+  margin-top: 25px;
+  padding: 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f9fafb;
+}
+
+.location-header h3 {
+  margin: 0 0 5px;
+  color: #374151;
+  font-size: 16px;
+}
+
+.location-header p {
+  margin: 0 0 15px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #6b7280;
+}
+
+/* Location Button */
+
+.location-button {
+  width: 100%;
+  padding: 11px;
+  border: 1px solid #374151;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.location-button:hover {
+  background: #374151;
+  color: #ffffff;
+}
+
+/* Location Status */
+
+.location-status,
+.location-success {
+  margin: 10px 0 0;
+  font-size: 12px;
+}
+
+.location-status {
+  color: #b45309;
+}
+
+.location-success {
+  color: #15803d;
+}
+
+/* Coordinates */
+
+.coordinates {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.coordinates div {
+  padding: 10px;
+  border-radius: 7px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+}
+
+.coordinates span {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.coordinates strong {
+  font-size: 13px;
+  color: #374151;
+}
+
+/* Register Button */
+
+.register-button {
+  width: 100%;
+  margin-top: 25px;
+  padding: 13px;
+  border: none;
+  border-radius: 8px;
+  background: #1f2937;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.register-button:hover {
+  background: #111827;
+}
+
+.register-button:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* Login */
+
+.login-section {
+  text-align: center;
+  margin-top: 22px;
+}
+
+.login-section p {
+  margin: 0;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.login-link {
+  margin-left: 5px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #1f2937;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.login-link:hover {
+  text-decoration: underline;
+}
+
+/* Mobile */
+
+@media (max-width: 520px) {
+  .register-page {
+    padding: 20px 12px;
+  }
+
+  .register-card {
+    padding: 25px 20px;
+  }
+
+  .register-header h1 {
+    font-size: 26px;
+  }
+
+  .register-header h2 {
+    font-size: 20px;
+  }
+
+  .coordinates {
+    grid-template-columns: 1fr;
+  }
+}
