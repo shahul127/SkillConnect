@@ -131,9 +131,24 @@ function Register() {
     setLoading(true);
 
     try {
-      console.log("Registration Data:", formData);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      alert("Registration successful!");
+    const response = await fetch(
+    "http://127.0.0.1:8000/auth/register",
+    {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            password: formData.password,
+            role: formData.role,
+            latitude: Number(formData.latitude),
+            longitude: Number(formData.longitude)
+        })
+    }
+);
       setFormData({
         name: "",
         email: "",
@@ -238,7 +253,7 @@ function Register() {
                 Customer
               </option>
 
-              <option value="provider">
+              <option value="worker">
                 Service Provider/worker
               </option>
             </select>
