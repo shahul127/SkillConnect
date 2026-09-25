@@ -3,6 +3,7 @@ from app.models.schema import AssessmentRequest
 from app.services.gem_service import generate_questions
 from app.database.mongo import assessments, users
 from app.services.speech_service import speech_to_text
+from app.services.question_service import get_question
 router = APIRouter(
     prefix="/assessment",
     tags=["AI Assessment"]
@@ -35,3 +36,20 @@ async def transcribe_speech(file: UploadFile = File(...)):
     return {
         "text": text
     }    
+
+@router.get("/question")
+def get_assessment_question(
+    skill: str,
+    domain: str,
+    level: str
+):
+    question = get_question(skill, domain, level)
+
+    if not question:
+        return {
+            "message": "Question not found"
+        }
+
+    question["_id"] = str(question["_id"])
+
+    return question    
