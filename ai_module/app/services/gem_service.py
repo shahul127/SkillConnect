@@ -18,7 +18,6 @@ Experience Level: {experience}
 Generate exactly 5 practical questions.
 
 IMPORTANT LANGUAGE REQUIREMENT:
-
 Questions MUST be in conversational spoken Tamil.
 
 Do NOT use formal/literary Tamil.
@@ -31,7 +30,6 @@ pipe, leak, wire, current, voltage, motor, switch, gas, pressure,
 AC, cooling, tools, machine, safety, etc.
 
 Example style:
-
 "Pipe-la leak வந்திருச்சுன்னா, அதை எப்படி சரி பண்ணுவீங்க?"
 
 "Current போயிடுச்சுன்னா, முதல்ல என்ன check பண்ணுவீங்க?"
@@ -50,7 +48,6 @@ For every question provide:
 
 The expected_answer should also be written in conversational Tamil
 with common English technical words.
-
 Return ONLY valid JSON:
 
 [
