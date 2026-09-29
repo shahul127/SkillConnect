@@ -152,6 +152,28 @@ def next_question(request: AdaptiveQuestionRequest):
         "question": question["question"]
     }
 
+@router.get("/result/{assessment_id}")
+def get_assessment_result(assessment_id: str):
+    assessment = assessments.find_one({"_id": ObjectId(assessment_id)})
+    if not assessment:
+        raise HTTPException( status_code=404,detail="Assessment not found")
+
+    domain_scores = assessment["domain_scores"]
+    domain_averages = {}
+    for domain, scores in domain_scores.items():
+        domain_averages[domain] = round(sum(scores) / len(scores),2)
+
+    strongest_domain = max(domain_averages,key=domain_averages.get)
+    overall_score = round(sum(domain_averages.values()) / len(domain_averages),2)
+
+    return {
+        "status": assessment["status"],
+        "overall_score": overall_score,
+        "domain_scores": domain_averages,
+        "strongest_domain": strongest_domain,
+        "total_questions": assessment["total_questions"]
+    }
+
 @router.post("/speech/transcribe")
 async def transcribe_speech(file: UploadFile = File(...)):
     audio = await file.read()
