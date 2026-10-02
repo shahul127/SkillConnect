@@ -11,6 +11,29 @@ router = APIRouter(
     prefix="/assessment",
     tags=["AI Assessment"]
 )
+
+def calculate_assessment_result(domain_scores):
+    domain_averages = {}
+    for domain, scores in domain_scores.items():
+        if scores:
+            domain_averages[domain] = round(sum(scores) / len(scores),2 )
+
+    if not domain_averages:
+        return {
+            "domain_averages": {},
+            "overall_score": 0,
+            "strongest_domain": None
+        }
+
+    overall_score = round(sum(domain_averages.values())/ len(domain_averages), 2)
+    strongest_domain = max(domain_averages,key=domain_averages.get)
+    return {
+        "domain_averages": domain_averages,
+        "overall_score": overall_score,
+        "strongest_domain": strongest_domain
+    }
+
+
 @router.post("/start")
 def start_assessment(data: AssessmentRequest):
 
@@ -91,11 +114,22 @@ def next_question(request: AdaptiveQuestionRequest):
 
     total_questions = assessment.get("total_questions", 0)
     if total_questions >= MAX_QUESTIONS:
+
+        result = calculate_assessment_result(assessment.get("domain_scores", {}))
         assessments.update_one(
             {"_id": assessment["_id"]},
-            {"$set": {"status": "completed"}}
+            {"$set":
+             {
+                "status": "completed",
+                "domain_averages": result["domain_averages"],
+                "overall_score": result["overall_score"],
+                "strongest_domain": result["strongest_domain"]
+            }}
         )
-        return {"message": "Assessment completed"}
+        return {  
+        "message": "Assessment completed",
+        "overall_score": result["overall_score"],
+        "strongest_domain": result["strongest_domain"]}
 
     skill = assessment["skill"]
     screening_count = assessment.get("screening_count", 0)
@@ -129,11 +163,20 @@ def next_question(request: AdaptiveQuestionRequest):
 
     question = get_next_domain(domain_scores,questions_asked,skill)
     if not question:
+        result = calculate_assessment_result(domain_scores)
         assessments.update_one(
             {"_id": assessment["_id"]},
-            {"$set": {"status": "completed"}}
+            {"$set": {
+                "status": "completed",
+                "domain_averages": result["domain_averages"],
+                "overall_score": result["overall_score"],
+                "strongest_domain": result["strongest_domain"]
+                }
+            }
         )
-        return {"message": "Assessment completed"}
+        return { "message": "Assessment completed",
+        "overall_score": result["overall_score"],
+        "strongest_domain": result["strongest_domain"]}
 
     question_id = str(question["_id"])
 

@@ -18,3 +18,8 @@ class WorkerSaveRequest(BaseModel):
     skill: str
     experience: str
     ai_score: float    
+
+class RecommendationRequest(BaseModel):
+    service: str
+    latitude: float
+    longitude: float    
