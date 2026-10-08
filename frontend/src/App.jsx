@@ -1,7 +1,12 @@
-import Register from "./pages/Register";
+import AppRoutes from "./routes/AppRoutes";
+import { LanguageProvider } from "./context/LanguageContext";
 
 function App() {
-  return <Register />;
+  return (
+    <LanguageProvider>
+      <AppRoutes />
+    </LanguageProvider>
+  );
 }
 
 export default App;
