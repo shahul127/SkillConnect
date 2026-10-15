@@ -41,7 +41,7 @@ def concept_coverage(answer, concepts):
 
 def evaluate_answer(answer,expected_answer,key_concepts=None):
     answer = normalize_text(answer)
-    expected_answer = normalize_text(expected_answer )
+    expected_answer = normalize_text(expected_answer)
     answer_vector = model.encode([answer])
     expected_vector = model.encode([expected_answer])
     similarity = cosine_similarity( answer_vector, expected_vector )[0][0]

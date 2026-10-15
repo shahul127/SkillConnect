@@ -204,7 +204,7 @@ def get_assessment_result(assessment_id: str):
     domain_scores = assessment["domain_scores"]
     domain_averages = {}
     for domain, scores in domain_scores.items():
-        domain_averages[domain] = round(sum(scores) / len(scores),2)
+        domain_averages[domain] = round(sum(scores) / len(scores), 2) if scores else 0.0
 
     strongest_domain = max(domain_averages,key=domain_averages.get)
     overall_score = round(sum(domain_averages.values()) / len(domain_averages),2)
