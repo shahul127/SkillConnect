@@ -1,31 +1,40 @@
 import { useState } from "react";
+import { registerUser, loginUser } from "../services/authService";
 import "./Register.css";
 
-function Register() {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    password: "",
-    confirmPassword: "",
-    role: "customer",
-    latitude: "",
-    longitude: "",
-  });
+const initialForm = {
+  name: "",
+  email: "",
+  phone: "",
+  password: "",
+  confirmPassword: "",
+  role: "customer",
+  latitude: "",
+  longitude: "",
+};
 
-  const [locationStatus, setLocationStatus] = useState("");
+export default function Register() {
+  const [isLogin, setIsLogin] = useState(false);
+  const [form, setForm] = useState(initialForm);
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("");
   const [loading, setLoading] = useState(false);
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const [locationStatus, setLocationStatus] = useState("");
 
-    setFormData((prev) => ({
-      ...prev,
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+
+    setForm((previous) => ({
+      ...previous,
       [name]: value,
     }));
   };
-  const getCurrentLocation = () => {
+
+  const getLocation = () => {
+    setLocationStatus("");
+
     if (!navigator.geolocation) {
-      setLocationStatus("Geolocation is not supported by your browser.");
+      setLocationStatus("Your browser does not support GPS location.");
       return;
     }
 
@@ -33,357 +42,351 @@ function Register() {
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const latitude = position.coords.latitude;
-        const longitude = position.coords.longitude;
-
-        setFormData((prev) => ({
-          ...prev,
-          latitude: latitude.toFixed(6),
-          longitude: longitude.toFixed(6),
+        setForm((previous) => ({
+          ...previous,
+          latitude: String(position.coords.latitude),
+          longitude: String(position.coords.longitude),
         }));
 
-        setLocationStatus("Location detected successfully.");
+        setLocationStatus("Location captured successfully.");
       },
       (error) => {
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            setLocationStatus(
-              "Location permission was denied. Please allow location access."
-            );
-            break;
-
-          case error.POSITION_UNAVAILABLE:
-            setLocationStatus("Location information is unavailable.");
-            break;
-
-          case error.TIMEOUT:
-            setLocationStatus("Location request timed out.");
-            break;
-
-          default:
-            setLocationStatus("Unable to detect your location.");
+        if (error.code === error.PERMISSION_DENIED) {
+          setLocationStatus("Please allow location permission in your browser.");
+        } else {
+          setLocationStatus("Unable to detect location. Please try again.");
         }
       },
       {
         enableHighAccuracy: true,
-        timeout: 10000,
+        timeout: 15000,
         maximumAge: 0,
       }
     );
   };
-  const validateForm = () => {
-    if (
-      !formData.name ||
-      !formData.email ||
-      !formData.phone ||
-      !formData.password ||
-      !formData.confirmPassword
-    ) {
-      alert("Please fill in all required fields.");
-      return false;
+
+  const validateRegistration = () => {
+    if (form.name.trim().length < 3) {
+      return "Name must contain at least 3 characters.";
     }
 
-    if (formData.name.length < 3) {
-      alert("Name must contain at least 3 characters.");
-      return false;
+    if (!/^[6-9]\d{9}$/.test(form.phone.trim())) {
+      return "Enter a valid 10-digit Indian mobile number.";
     }
 
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!emailPattern.test(formData.email)) {
-      alert("Please enter a valid email address.");
-      return false;
+    if (form.password.length < 8 || form.password.length > 32) {
+      return "Password must contain between 8 and 32 characters.";
     }
 
-    const phonePattern = /^[6-9]\d{9}$/;
-
-    if (!phonePattern.test(formData.phone)) {
-      alert("Please enter a valid 10-digit phone number.");
-      return false;
+    if (form.password !== form.confirmPassword) {
+      return "Passwords do not match.";
     }
 
-    if (formData.password.length < 8) {
-      alert("Password must contain at least 8 characters.");
-      return false;
+    if (form.latitude === "" || form.longitude === "") {
+      return "Please capture your location before registering.";
     }
 
-    if (formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match.");
-      return false;
-    }
-
-    if (!formData.latitude || !formData.longitude) {
-      alert("Please detect your current location.");
-      return false;
-    }
-
-    return true;
+    return "";
   };
 
-  // Submit registration
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setMessage("");
+    setMessageType("");
 
-    if (!validateForm()) {
-      return;
+    if (!isLogin) {
+      const validationError = validateRegistration();
+
+      if (validationError) {
+        setMessage(validationError);
+        setMessageType("error");
+        return;
+      }
     }
 
     setLoading(true);
 
     try {
-    const response = await fetch(
-    "http://127.0.0.1:8000/auth/register",
-    {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            name: formData.name,
-            email: formData.email,
-            phone: formData.phone,
-            password: formData.password,
-            role: formData.role,
-            latitude: Number(formData.latitude),
-            longitude: Number(formData.longitude)
-        })
-    }
-);
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        password: "",
-        confirmPassword: "",
-        role: "customer",
-        latitude: "",
-        longitude: "",
-      });
+      if (isLogin) {
+        const result = await loginUser({
+          email: form.email.trim(),
+          password: form.password,
+        });
 
-      setLocationStatus("");
+        if (!result.access_token) {
+          setMessage(result.message || "Login failed.");
+          setMessageType("error");
+          return;
+        }
+
+        localStorage.setItem("access_token", result.access_token);
+
+        setMessage(result.message || "Login successful!");
+        setMessageType("success");
+      } else {
+        const userData = {
+          name: form.name.trim(),
+          email: form.email.trim(),
+          phone: form.phone.trim(),
+          password: form.password,
+          role: form.role,
+          latitude: Number(form.latitude),
+          longitude: Number(form.longitude),
+        };
+
+        const result = await registerUser(userData);
+
+        if (
+          result.message?.toLowerCase().includes("already registered")
+        ) {
+          setMessage(result.message);
+          setMessageType("error");
+        } else {
+          setMessage(result.message || "Registration successful!");
+          setMessageType("success");
+          setIsLogin(true);
+          setForm((previous) => ({
+            ...previous,
+            password: "",
+            confirmPassword: "",
+          }));
+        }
+      }
     } catch (error) {
-      console.error("Registration error:", error);
-      alert("Registration failed. Please try again.");
+      const detail = error.response?.data?.detail;
+      const serverMessage = error.response?.data?.message;
+
+      if (Array.isArray(detail)) {
+        setMessage(detail.map((item) => item.msg).join(", "));
+      } else {
+        setMessage(
+          typeof detail === "string"
+            ? detail
+            : serverMessage ||
+                "Request failed. Check the backend and try again."
+        );
+      }
+
+      setMessageType("error");
     } finally {
       setLoading(false);
     }
   };
 
+  const switchMode = () => {
+    setIsLogin((previous) => !previous);
+    setMessage("");
+    setMessageType("");
+    setLocationStatus("");
+  };
+
   return (
-    <div className="register-page">
-      <div className="register-card">
+    <main className="auth-page">
+      <section className="auth-card">
+        <div className="brand-icon">SC</div>
 
-        {/* Header */}
-        <div className="register-header">
-          <h1>SkillConnect</h1>
+        <h1>SkillConnect</h1>
 
-          <h2>Create Your Account</h2>
+        <p className="subtitle">
+          Find the right skills. Connect with the right people.
+        </p>
 
-          <p>
-            Connect with trusted skilled professionals
-            and get services easily.
-          </p>
+        <div className="mode-switch">
+          <button
+            type="button"
+            className={!isLogin ? "mode-active" : ""}
+            onClick={() => {
+              setIsLogin(false);
+              setMessage("");
+            }}
+          >
+            Register
+          </button>
+
+          <button
+            type="button"
+            className={isLogin ? "mode-active" : ""}
+            onClick={() => {
+              setIsLogin(true);
+              setMessage("");
+            }}
+          >
+            Login
+          </button>
         </div>
 
-        {/* Registration Form */}
+        <h2>{isLogin ? "Welcome back!" : "Create your account"}</h2>
+
+        <p className="form-description">
+          {isLogin
+            ? "Enter your account details to continue."
+            : "Join SkillConnect as a customer or skilled worker."}
+        </p>
+
         <form onSubmit={handleSubmit}>
+          {!isLogin && (
+            <>
+              <div className="form-group">
+                <label htmlFor="name">Full name</label>
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  placeholder="Enter your full name"
+                  value={form.name}
+                  onChange={handleChange}
+                  autoComplete="name"
+                  minLength={3}
+                  required
+                />
+              </div>
 
-          {/* Name */}
+              <div className="form-group">
+                <label htmlFor="phone">Mobile number</label>
+                <input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  placeholder="10-digit mobile number"
+                  value={form.phone}
+                  onChange={handleChange}
+                  autoComplete="tel"
+                  pattern="[6-9][0-9]{9}"
+                  maxLength={10}
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="role">Register as</label>
+                <select
+                  id="role"
+                  name="role"
+                  value={form.role}
+                  onChange={handleChange}
+                >
+                  <option value="customer">Customer</option>
+                  <option value="worker">Skilled Worker</option>
+                </select>
+              </div>
+            </>
+          )}
+
           <div className="form-group">
-            <label htmlFor="name">
-              Full Name <span>*</span>
-            </label>
-
-            <input
-              id="name"
-              type="text"
-              name="name"
-              placeholder="Enter your full name"
-              value={formData.name}
-              onChange={handleChange}
-            />
-          </div>
-
-          {/* Email */}
-          <div className="form-group">
-            <label htmlFor="email">
-              Email Address <span>*</span>
-            </label>
-
+            <label htmlFor="email">Email address</label>
             <input
               id="email"
-              type="email"
               name="email"
-              placeholder="example@gmail.com"
-              value={formData.email}
+              type="email"
+              placeholder="you@example.com"
+              value={form.email}
               onChange={handleChange}
+              autoComplete="email"
+              required
             />
           </div>
 
-          {/* Phone */}
           <div className="form-group">
-            <label htmlFor="phone">
-              Phone Number <span>*</span>
-            </label>
-
-            <input
-              id="phone"
-              type="tel"
-              name="phone"
-              placeholder="Enter 10-digit phone number"
-              maxLength="10"
-              value={formData.phone}
-              onChange={handleChange}
-            />
-          </div>
-
-          {/* Role */}
-          <div className="form-group">
-            <label htmlFor="role">
-              Register As <span>*</span>
-            </label>
-
-            <select
-              id="role"
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-            >
-              <option value="customer">
-                Customer
-              </option>
-
-              <option value="worker">
-                Service Provider/worker
-              </option>
-            </select>
-          </div>
-
-          {/* Password */}
-          <div className="form-group">
-            <label htmlFor="password">
-              Password <span>*</span>
-            </label>
-
+            <label htmlFor="password">Password</label>
             <input
               id="password"
-              type="password"
               name="password"
-              placeholder="Minimum 8 characters"
-              value={formData.password}
-              onChange={handleChange}
-            />
-
-            {formData.password && (
-              <div className="password-strength">
-                {formData.password.length < 8
-                  ? "Weak password"
-                  : formData.password.length < 12
-                  ? "Medium password"
-                  : "Strong password"}
-              </div>
-            )}
-          </div>
-
-          {/* Confirm Password */}
-          <div className="form-group">
-            <label htmlFor="confirmPassword">
-              Confirm Password <span>*</span>
-            </label>
-
-            <input
-              id="confirmPassword"
               type="password"
-              name="confirmPassword"
-              placeholder="Re-enter your password"
-              value={formData.confirmPassword}
+              placeholder="Enter your password"
+              value={form.password}
               onChange={handleChange}
+              autoComplete={isLogin ? "current-password" : "new-password"}
+              minLength={isLogin ? undefined : 8}
+              maxLength={isLogin ? undefined : 32}
+              required
             />
           </div>
 
-          {/* Location Section */}
-          <div className="location-section">
+          {!isLogin && (
+            <>
+              <div className="password-hint">
+                Use 8–32 characters. Avoid passwords longer than the
+                backend's supported limit.
+              </div>
 
-            <div className="location-header">
-              <div>
-                <h3>Service Location</h3>
+              <div className="form-group">
+                <label htmlFor="confirmPassword">Confirm password</label>
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  placeholder="Re-enter your password"
+                  value={form.confirmPassword}
+                  onChange={handleChange}
+                  autoComplete="new-password"
+                  required
+                />
+              </div>
 
-                <p>
-                  Your location helps us find nearby service
-                  providers.
+              <div className="location-box">
+                <div>
+                  <strong>Location</strong>
+                  <p>Required to register your account.</p>
+                </div>
+
+                <button
+                  type="button"
+                  className="location-button"
+                  onClick={getLocation}
+                >
+                  Get GPS
+                </button>
+              </div>
+
+              {locationStatus && (
+                <p className="location-status">{locationStatus}</p>
+              )}
+
+              {form.latitude !== "" && form.longitude !== "" && (
+                <p className="coordinates">
+                  Latitude: {form.latitude}
+                  <br />
+                  Longitude: {form.longitude}
                 </p>
-              </div>
-            </div>
+              )}
+            </>
+          )}
 
-            <button
-              type="button"
-              className="location-button"
-              onClick={getCurrentLocation}
+          {message && (
+            <div
+              className={`message ${
+                messageType === "success" ? "success" : "error"
+              }`}
+              role="status"
             >
-              📍 Use My Current Location
-            </button>
+              {message}
+            </div>
+          )}
 
-            {locationStatus && (
-              <p
-                className={
-                  formData.latitude
-                    ? "location-success"
-                    : "location-status"
-                }
-              >
-                {locationStatus}
-              </p>
-            )}
-
-            {formData.latitude && formData.longitude && (
-              <div className="coordinates">
-
-                <div>
-                  <span>Latitude</span>
-                  <strong>{formData.latitude}</strong>
-                </div>
-
-                <div>
-                  <span>Longitude</span>
-                  <strong>{formData.longitude}</strong>
-                </div>
-
-              </div>
-            )}
-          </div>
-
-          {/* Submit */}
           <button
             type="submit"
-            className="register-button"
+            className="submit-button"
             disabled={loading}
           >
             {loading
-              ? "Creating Account..."
+              ? "Please wait..."
+              : isLogin
+              ? "Login to SkillConnect"
               : "Create Account"}
           </button>
-
         </form>
 
-        {/* Login */}
-        <div className="login-section">
-          <p>
-            Already have an account?
-            <button
-              type="button"
-              className="login-link"
-              onClick={() => {
-                console.log("Navigate to Login");
-              }}
-            >
-              Login
-            </button>
-          </p>
-        </div>
+        <p className="switch-text">
+          {isLogin ? "Don't have an account?" : "Already registered?"}
+          <button type="button" onClick={switchMode}>
+            {isLogin ? "Create account" : "Login"}
+          </button>
+        </p>
 
-      </div>
-    </div>
+        <p className="footer-text">
+          SkillConnect · Connecting people through skills
+        </p>
+      </section>
+    </main>
   );
 }
-
-export default Register;
