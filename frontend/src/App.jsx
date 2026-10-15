@@ -1,7 +1,5 @@
-import Register from "./pages/Register";
+import Payments from "./Payments.jsx";
 
-function App() {
-  return <Register />;
+export default function App() {
+  return <Payments />;
 }
-
-export default App;
