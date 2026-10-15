@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from app.database.mongo import users
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes.auth import router as auth_router
-
+from app.routes.ai import router as ai_router
 
 app=FastAPI(title="Skill Connect backend")
 app.add_middleware(
@@ -20,3 +20,4 @@ def home():
     return {"message": "Skill Connect backend is running!"}
 
 app.include_router(auth_router)
+app.include_router(ai_router)

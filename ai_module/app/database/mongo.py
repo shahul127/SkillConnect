@@ -9,3 +9,4 @@ db = client["SkillConnect"]
 
 users = db["Users"]
 assessments = db["Assessments"]
+questions=db["questions"]
