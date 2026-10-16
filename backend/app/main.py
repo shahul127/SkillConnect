@@ -3,8 +3,13 @@ from app.database.mongo import users
 from fastapi.middleware.cors import CORSMiddleware
 from app.routes.auth import router as auth_router
 from app.routes.ai import router as ai_router
+from app.routes.services import router as services_router
+from app.routes.profiles import router as profiles_router
+from app.routes.bookings import router as bookings_router
+from app.routes.notifications import router as notifications_router
+from app.routes.payments_reviews import router as payments_reviews_router
 
-app=FastAPI(title="Skill Connect backend")
+app = FastAPI(title="Skill Connect backend")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -13,11 +18,17 @@ app.add_middleware(
     ],
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*"],
+    allow_headers=["*"]
 )
+
 @app.get("/")
 def home():
     return {"message": "Skill Connect backend is running!"}
 
 app.include_router(auth_router)
 app.include_router(ai_router)
+app.include_router(services_router)
+app.include_router(profiles_router)
+app.include_router(bookings_router)
+app.include_router(notifications_router)
+app.include_router(payments_reviews_router)

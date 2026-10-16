@@ -1,0 +1,3 @@
+export default function Field({ label, value, onChange, type = "text", required = false, ...props }) {
+  return <label className="field"><span>{label}</span><input type={type} value={value ?? ""} onChange={e => onChange(e.target.value)} required={required} {...props} /></label>;
+}

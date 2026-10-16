@@ -2,8 +2,8 @@ import math
 from bson import ObjectId
 from app.database.mongo import users, assessments
 
-SERVICE_INFO = {
 
+SERVICE_INFO = {
     "AC Repair": {
         "skill": "AC Technician",
         "domain": "Troubleshooting & Diagnostics"
@@ -108,6 +108,7 @@ SERVICE_INFO = {
 
 def calculate_distance(lat1, lon1, lat2, lon2):
     R = 6371
+
     lat1 = math.radians(lat1)
     lon1 = math.radians(lon1)
     lat2 = math.radians(lat2)
@@ -122,35 +123,43 @@ def calculate_distance(lat1, lon1, lat2, lon2):
         * math.cos(lat2)
         * math.sin(dlon / 2) ** 2
     )
-    c = 2 * math.atan2(math.sqrt(a),math.sqrt(1 - a))
+
+    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
     return round(R * c, 2)
 
 
 def get_recommendations(service, latitude, longitude):
     service_info = SERVICE_INFO.get(service)
+
     if not service_info:
         return {
             "message": "Service not supported",
             "recommendations": []
         }
+
     skill = service_info["skill"]
     required_domain = service_info["domain"]
+
     search_radii = [5, 10, 20, 30]
 
     for radius in search_radii:
         recommendations = []
+
         completed_assessments = assessments.find({
             "skill": skill,
             "status": "completed"
         })
+
         for assessment in completed_assessments:
             user_id = assessment.get("user_id")
+
             if not user_id:
                 continue
 
             try:
                 worker = users.find_one({
-                    "_id": ObjectId(user_id),
+                    "_id": ObjectId(str(user_id)),
                     "role": "worker"
                 })
             except Exception:
@@ -159,34 +168,42 @@ def get_recommendations(service, latitude, longitude):
             if not worker:
                 continue
 
-            if ("latitude" not in worker or "longitude" not in worker):
+            worker_latitude = worker.get("latitude")
+            worker_longitude = worker.get("longitude")
+
+            if worker_latitude is None or worker_longitude is None:
                 continue
 
-            distance = calculate_distance(
-                latitude,
-                longitude,
-                worker["latitude"],
-                worker["longitude"])
+            try:
+                distance = calculate_distance(
+                    float(latitude),
+                    float(longitude),
+                    float(worker_latitude),
+                    float(worker_longitude)
+                )
+            except (TypeError, ValueError):
+                continue
 
             if distance > radius:
                 continue
 
-            domain_averages = assessment.get(
-                "domain_averages",
-                {})
-            overall_score = assessment.get("overall_score",0)
+            domain_averages = assessment.get("domain_averages", {})
+            overall_score = assessment.get("overall_score", 0)
             strongest_domain = assessment.get("strongest_domain")
 
-            domain_score = domain_averages.get(required_domain,0)
-            if domain_score == 0:
-                continue
+            domain_score = domain_averages.get(required_domain, 0)
 
-            distance_score = max(0, 100 - (distance / radius) * 100)
-            recommendation_score = (
-            domain_score * 0.3
-            + overall_score * 0.3
-            + distance_score * 0.4
+            distance_score = max(
+                0,
+                100 - (distance / radius) * 100
             )
+
+            recommendation_score = (
+                domain_score * 0.3
+                + overall_score * 0.3
+                + distance_score * 0.4
+            )
+
             recommendations.append({
                 "worker_id": str(worker["_id"]),
                 "name": worker.get("name"),
@@ -197,12 +214,16 @@ def get_recommendations(service, latitude, longitude):
                 "overall_score": overall_score,
                 "strongest_domain": strongest_domain,
                 "distance_km": distance,
-                "recommendation_score":recommendation_score
+                "recommendation_score": round(
+                    recommendation_score, 2
+                )
             })
 
         if recommendations:
-
-            recommendations.sort(key=lambda worker: worker["recommendation_score"],reverse=True)
+            recommendations.sort(
+                key=lambda worker: worker["recommendation_score"],
+                reverse=True
+            )
 
             return {
                 "service": service,

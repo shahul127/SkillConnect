@@ -1,4 +1,5 @@
 from pydantic import BaseModel, EmailStr , Field ,field_validator
+from typing import Literal
 # Creating model for validating the user details
 class UserCreate(BaseModel):
     name: str
@@ -9,7 +10,7 @@ class UserCreate(BaseModel):
         min_length=8,
         max_length=32 
     )
-    role: str
+    role:  Literal["worker", "customer"]
     latitude: float
     longitude: float
 # validating the password with fieldvalidator as lookahead is not supported in pydanticv2

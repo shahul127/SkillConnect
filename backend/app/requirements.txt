@@ -6,3 +6,5 @@ pydantic
 python-jose
 passlib
 bcrypt
+requests
+email-validator

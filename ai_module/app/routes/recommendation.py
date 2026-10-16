@@ -7,7 +7,7 @@ router = APIRouter(
     tags=["Recommendation"]
 )
 
-@router.post("/")
+@router.get("/")
 def recommend_workers(data: RecommendationRequest):
 
     return get_recommendations( data.service,data.latitude,data.longitude)
